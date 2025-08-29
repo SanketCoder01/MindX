@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, User, Briefcase } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function NewLogin() {
   const router = useRouter();

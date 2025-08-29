@@ -8,27 +8,17 @@ import { revalidatePath } from 'next/cache';
 export async function submitGrievance(formData: FormData) {
   const supabase = createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'You must be logged in to submit a grievance.' };
-  }
-
-  // Get student's department and year for proper filtering
-  const { data: student, error: studentError } = await supabase
-    .from('students')
-    .select('department, year')
-    .eq('id', user.id)
-    .single();
-
-  if (studentError || !student) {
-    return { error: 'Unable to fetch student information.' };
-  }
+  // Demo mode - no authentication required
+  const demoUserId = 'demo-student-123';
+  const demoStudent = {
+    department: 'Computer Science and Engineering',
+    year: '3rd Year'
+  };
 
   const grievanceData = {
-    student_id: user.id,
-    student_department: student.department,
-    student_year: student.year,
+    student_id: demoUserId,
+    student_department: demoStudent.department,
+    student_year: demoStudent.year,
     subject: formData.get('subject') as string,
     category: formData.get('category') as string,
     description: formData.get('description') as string,

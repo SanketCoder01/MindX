@@ -123,15 +123,14 @@ export default function EventsPage() {
   const [currentEventForSeats, setCurrentEventForSeats] = useState<string | null>(null)
   const supabase = createClient()
 
-  // Load events from Supabase on component mount
+  // Demo mode - load events without authentication
   useEffect(() => {
     const loadEvents = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const result = await getFacultyEvents(user.id)
-        if (result.success && result.data) {
-          setEvents(result.data)
-        }
+      // Demo mode - no authentication required
+      const demoFacultyId = 'demo-faculty-123'
+      const result = await getFacultyEvents(demoFacultyId)
+      if (result.success && result.data) {
+        setEvents(result.data)
       }
     }
     loadEvents()
@@ -451,8 +450,7 @@ export default function EventsPage() {
       return
     }
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    const demoUserId = 'demo-faculty-123'
 
     // fetch faculty meta for name and department
     let faculty_name = ""
@@ -461,7 +459,7 @@ export default function EventsPage() {
       const { data: facultyRow } = await supabase
         .from('faculty')
         .select('name, department')
-        .eq('id', user.id)
+        .eq('id', demoUserId)
         .single()
       faculty_name = facultyRow?.name || ""
       faculty_department = facultyRow?.department || ""
@@ -485,7 +483,7 @@ export default function EventsPage() {
       registration_end: registrationEnd || new Date(`${date}T${time}`).toISOString(),
       registration_fields: generatedFormFields,
       venue_type: selectedVenue,
-      created_by: user.id,
+      created_by: demoUserId,
       faculty_name,
       faculty_department
     }

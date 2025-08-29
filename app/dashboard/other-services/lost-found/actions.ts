@@ -6,17 +6,14 @@ import { revalidatePath } from 'next/cache';
 
 export async function submitLostFoundItem(formData: FormData) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: 'You must be logged in to report an item.' };
-  }
+  // Demo mode - no authentication required
+  const demoUserId = 'demo-user-123';
 
   const imageFile = formData.get('image') as File;
   let imageUrl = null;
 
   if (imageFile && imageFile.size > 0) {
-    const fileName = `${user.id}/${Date.now()}-${imageFile.name}`;
+    const fileName = `${demoUserId}/${Date.now()}-${imageFile.name}`;
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('lost-and-found')
       .upload(fileName, imageFile);

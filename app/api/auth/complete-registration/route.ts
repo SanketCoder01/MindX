@@ -8,9 +8,9 @@ export async function POST(request: NextRequest) {
     const { userType, profile, faceImageData, password } = await request.json()
 
     // Validate required fields
-    if (!profile.email || !profile.name || !profile.field || !profile.course || !profile.department || !password) {
+    if (!profile.email || !profile.name || !profile.department || !password) {
       return NextResponse.json(
-        { error: 'Missing required fields: email, name, field, course, department, and password are required' },
+        { error: 'Missing required fields: email, name, department, and password are required' },
         { status: 400 }
       )
     }
@@ -75,15 +75,12 @@ export async function POST(request: NextRequest) {
         email: profile.email,
         user_type: userType,
         name: profile.name,
-        field: profile.field,
-        course: profile.course,
         department: profile.department,
         year: userType === 'student' ? profile.year : null,
-        mobile_number: profile.mobile,
+        phone: profile.mobile,
         face_url: faceUrl,
-        password_hash: hashedPassword,
-        status: 'pending_approval',
-        face_registered: !!faceUrl,
+        status: 'pending',
+        auth_provider: 'google',
         submitted_at: new Date().toISOString()
       })
       .select('id')

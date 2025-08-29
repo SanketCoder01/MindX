@@ -1,5 +1,5 @@
-// Email domain validation for Sanjivani University (single domain only)
-const ALLOWED_EMAIL_DOMAINS = ['@sanjivani.edu.in']
+// Email domain validation for educational institutions
+const ALLOWED_EMAIL_DOMAINS = ['@sanjivani.edu.in', '@sanjivani.org.in', '@set.edu.in', '@ac.in']
 
 export const validateUniversityEmail = (email: string): boolean => {
   if (!email || typeof email !== 'string') return false

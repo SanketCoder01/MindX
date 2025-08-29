@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Camera, User, Mail, Phone, GraduationCap, Building, CheckCircle, Loader2 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
-import SelfieCapture from '@/components/SelfieCapture'
+import PythonFaceCapture from '@/components/PythonFaceCapture'
 
 interface UserData {
   name: string
@@ -310,33 +310,10 @@ function CompleteRegistrationContent() {
   )
 
   const renderSelfieStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="w-full max-w-md mx-auto px-4"
-    >
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Face Capture</CardTitle>
-          <CardDescription>
-            Take a clear photo of your face for attendance and identification
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SelfieCapture onCapture={handleSelfieCapture} />
-          <div className="mt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setStep('details')} 
-              className="w-full"
-            >
-              Back to Details
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+    <PythonFaceCapture 
+      onCapture={handleSelfieCapture}
+      onBack={() => setStep('details')}
+    />
   )
 
   const renderProcessingStep = () => (
@@ -373,29 +350,40 @@ function CompleteRegistrationContent() {
             <p className="text-gray-600">
               Thank you, {userData.name}! Your registration has been submitted for approval.
             </p>
+            
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-sm text-yellow-800">
                 <strong>Pending Approval:</strong> Your account is being reviewed by administrators. 
-                You'll be notified once approved.
+                You'll receive an email notification once approved.
               </p>
             </div>
             
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Next Steps:</strong>
+              </p>
+              <ul className="text-sm text-blue-700 mt-2 space-y-1 text-left">
+                <li>• Check your email for approval notification</li>
+                <li>• Once approved, you can access your dashboard</li>
+                <li>• Contact admin if you don't hear back within 24 hours</li>
+              </ul>
+            </div>
+            
             <div className="space-y-3">
-              <p className="text-sm text-gray-600 font-medium">Access dashboards directly:</p>
-              <div className="space-y-2">
-                <a 
-                  href="/student-dashboard" 
-                  className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-center block text-sm"
-                >
-                  Go to Student Dashboard
-                </a>
-                <a 
-                  href="/dashboard" 
-                  className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors text-center block text-sm"
-                >
-                  Go to Faculty Dashboard
-                </a>
-              </div>
+              <Button 
+                onClick={() => router.push('/auth/check-email')}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                Check Email Status
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={() => router.push('/login')}
+                className="w-full"
+              >
+                Back to Login
+              </Button>
             </div>
           </div>
         </CardContent>

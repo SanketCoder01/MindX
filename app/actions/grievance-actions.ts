@@ -70,6 +70,40 @@ export async function getAllGrievances() {
   }
 }
 
+// Get grievances for faculty (department and class wise)
+export async function getFacultyGrievances(facultyId: string) {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // First get faculty details to know their department
+    const { data: faculty, error: facultyError } = await supabase
+      .from("faculty")
+      .select("department")
+      .eq("id", facultyId)
+      .single()
+    
+    if (facultyError) throw facultyError
+    
+    // Get grievances from students in the same department
+    const { data, error } = await supabase
+      .from("grievances")
+      .select(`
+        *,
+        student:student_id(*),
+        assignedTo:assigned_to(*)
+      `)
+      .eq("student.department", faculty.department)
+      .order("created_at", { ascending: false })
+    
+    if (error) throw error
+    
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error fetching faculty grievances:", error)
+    return { success: false, error }
+  }
+}
+
 // Get grievances by student ID
 export async function getGrievancesByStudentId(studentId: string) {
   try {
@@ -224,10 +258,89 @@ export async function addGrievanceComment(
     
     revalidatePath("/university/other-services/grievance")
     revalidatePath("/student-dashboard/other-services/grievance")
+    revalidatePath("/faculty-dashboard/grievances")
     
     return { success: true, data }
   } catch (error) {
     console.error("Error adding grievance comment:", error)
+    return { success: false, error }
+  }
+}
+
+// Faculty response to grievance (can only respond, not create)
+export async function addFacultyResponse(
+  grievanceId: string,
+  facultyId: string,
+  response: string,
+  newStatus?: "in_review" | "resolved" | "rejected"
+) {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // Verify faculty can access this grievance (same department)
+    const { data: faculty, error: facultyError } = await supabase
+      .from("faculty")
+      .select("department")
+      .eq("id", facultyId)
+      .single()
+    
+    if (facultyError) throw facultyError
+    
+    const { data: grievance, error: grievanceError } = await supabase
+      .from("grievances")
+      .select(`
+        *,
+        student:student_id(department)
+      `)
+      .eq("id", grievanceId)
+      .single()
+    
+    if (grievanceError) throw grievanceError
+    
+    // Check if faculty is from same department as student
+    if (grievance.student.department !== faculty.department) {
+      throw new Error("Faculty can only respond to grievances from their department")
+    }
+    
+    // Add faculty response as comment
+    const { data: commentData, error: commentError } = await supabase
+      .from("grievance_comments")
+      .insert({
+        grievance_id: grievanceId,
+        user_id: facultyId,
+        user_type: "faculty",
+        comment: response,
+        is_internal: false
+      })
+      .select()
+    
+    if (commentError) throw commentError
+    
+    // Update grievance status if provided
+    let updateData: any = {
+      updated_at: new Date().toISOString()
+    }
+    
+    if (newStatus) {
+      updateData.status = newStatus
+      if (newStatus === "resolved") {
+        updateData.resolved_at = new Date().toISOString()
+      }
+    }
+    
+    const { data: updatedGrievance, error: updateError } = await supabase
+      .from("grievances")
+      .update(updateData)
+      .eq("id", grievanceId)
+      .select()
+    
+    if (updateError) throw updateError
+    
+    revalidatePath("/faculty-dashboard/grievances")
+    
+    return { success: true, data: { comment: commentData, grievance: updatedGrievance } }
+  } catch (error) {
+    console.error("Error adding faculty response:", error)
     return { success: false, error }
   }
 }

@@ -1,8 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client'
+// Using any types to avoid import issues
+type Session = any
+type User = any
 
 interface UserProfile {
   id?: string;
@@ -62,16 +64,74 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     getInitialSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('UserProvider: Auth state changed. New session:', session);
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+      console.log('🔍 Auth state changed. Event:', event);
+      
       setSession(session);
       const currentUser = session?.user;
       setUser(currentUser ?? null);
-      if (currentUser) {
-        console.log('UserProvider: Fetching profile for user from auth change:', currentUser.id);
-        await fetchUserProfile(currentUser);
-      } else {
-        console.log('UserProvider: No user found after auth change.');
+      
+      if (currentUser && event === 'SIGNED_IN') {
+        console.log('✅ User signed in:', currentUser.email);
+        
+        try {
+          // Check if user exists in database with detailed error handling
+          const { data: student, error: studentError } = await supabase
+            .from('students')
+            .select('*')
+            .eq('email', currentUser.email)
+            .maybeSingle();
+            
+          const { data: faculty, error: facultyError } = await supabase
+            .from('faculty')
+            .select('*')
+            .eq('email', currentUser.email)
+            .maybeSingle();
+            
+          const { data: pending, error: pendingError } = await supabase
+            .from('pending_registrations')
+            .select('*')
+            .eq('email', currentUser.email)
+            .maybeSingle();
+          
+          console.log('🔍 Database queries completed');
+          console.log('👤 Student result:', student ? 'FOUND' : 'NOT FOUND', studentError ? `ERROR: ${studentError.message}` : '');
+          console.log('👨‍🏫 Faculty result:', faculty ? 'FOUND' : 'NOT FOUND', facultyError ? `ERROR: ${facultyError.message}` : '');
+          console.log('⏳ Pending result:', pending ? 'FOUND' : 'NOT FOUND', pendingError ? `ERROR: ${pendingError.message}` : '');
+          
+          if (studentError || facultyError || pendingError) {
+            console.error('❌ Database errors detected:', { studentError, facultyError, pendingError });
+          }
+          
+          if (student || faculty) {
+            // Existing user - go to dashboard
+            console.log('🏠 Existing user found, redirecting to dashboard');
+            window.location.href = '/dashboard';
+          } else if (pending) {
+            // Pending approval
+            console.log('⏳ Pending registration found, redirecting to pending approval');
+            window.location.href = '/auth/pending-approval';
+          } else {
+            // New user - go to registration
+            console.log('📝 New user detected, redirecting to registration');
+            const params = new URLSearchParams({
+              email: currentUser.email!,
+              name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '',
+              photo: currentUser.user_metadata?.avatar_url || ''
+            });
+            window.location.href = `/student-registration?${params.toString()}`;
+          }
+        } catch (error) {
+          console.error('💥 Critical error in auth flow:', error);
+          // Fallback to registration on any error
+          const params = new URLSearchParams({
+            email: currentUser.email!,
+            name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '',
+            photo: currentUser.user_metadata?.avatar_url || ''
+          });
+          window.location.href = `/student-registration?${params.toString()}`;
+        }
+      } else if (!currentUser) {
         setProfile(null);
       }
     });

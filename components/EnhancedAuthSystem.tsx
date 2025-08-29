@@ -12,7 +12,8 @@ import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SimpleGoogleSignup from './SimpleGoogleSignup';
 import { useRouter, useSearchParams } from 'next/navigation';
-import supabase, { authenticateFaculty } from '@/lib/supabase'; // Assuming authenticateFaculty is exported from supabase lib
+import supabase, { authenticateFaculty } from '@/lib/supabase';
+import { authFlowManager } from '@/lib/auth/auth-flow-manager';
 
 // --- Helper to convert base64 to a File object for uploading ---
 function base64toFile(base64: string, filename: string): File {
@@ -53,17 +54,13 @@ export default function EnhancedAuthSystem({ userType }: EnhancedAuthSystemProps
   }, [searchParams]);
 
   const handleGoogleSignIn = async () => {
-    // Do NOT show animated overlay; only disable button label
     setIsLoading(true);
     setError('');
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?type=${userType}`,
-      },
-    });
-    if (error) {
-      setError(`Google Sign-In failed: ${error.message}`);
+    
+    try {
+      await authFlowManager.signInWithGoogle(`${window.location.origin}/auth/callback?type=${userType}`);
+    } catch (error: any) {
+      setError(error.message);
       setIsLoading(false);
     }
   };
@@ -72,23 +69,14 @@ export default function EnhancedAuthSystem({ userType }: EnhancedAuthSystemProps
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
     try {
-      // Use the same authentication method for both student and faculty
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        // Redirect based on user type
-        if (userType === 'faculty') {
-          router.push('/dashboard');
-        } else {
-          router.push('/student-dashboard');
-        }
+      // Use auth flow manager for email/password login
+      const { user } = await authFlowManager.signInWithEmail(email, password);
+      
+      if (user) {
+        // Get redirect path based on user status
+        const redirectPath = await authFlowManager.handlePostLogin(user);
+        router.push(redirectPath);
       }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');

@@ -107,6 +107,17 @@ function RegistrationForm() {
         }
       }
 
+      console.log('🚀 Submitting registration:', {
+        email: user.email,
+        field: formData.field,
+        course: formData.course,
+        department: formData.department,
+        year: formData.year,
+        user_type: 'student',
+        mobile: formData.mobileNumber,
+        name: userName,
+      })
+
       // Submit to secure registration API -> creates pending_registrations row
       const res = await fetch('/api/auth/secure-registration', {
         method: 'POST',
@@ -123,12 +134,18 @@ function RegistrationForm() {
         }),
       })
 
+      console.log('📡 API Response status:', res.status)
+      
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        const msg = data?.message || 'Registration submission failed'
+        console.error('❌ Registration API error:', data)
+        const msg = data?.message || data?.error || 'Registration submission failed'
         setError(msg)
         return
       }
+
+      const responseData = await res.json()
+      console.log('✅ Registration API success:', responseData)
 
       toast({
         title: "Registration Submitted!",

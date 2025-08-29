@@ -27,7 +27,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { initializeDatabase } from "@/app/actions/database-actions"
 
 export default function StudentMentorshipDashboard() {
@@ -42,29 +42,15 @@ export default function StudentMentorshipDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [isInitializing, setIsInitializing] = useState(false)
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const supabase = createClient()
 
   useEffect(() => {
-    // Get current user
-    const fetchCurrentUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
-        setCurrentUser(user)
-        return user.id
-      }
-      return null
-    }
-
+    // Demo mode - use mock user ID
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        const userId = await fetchCurrentUser()
-
-        if (!userId) {
-          setError("User not authenticated")
-          return
-        }
+        const userId = 'demo-student-123'
+        setCurrentUser({ id: userId })
 
         // Fetch mentor
         const { data: mentorData, error: mentorError } = await supabase

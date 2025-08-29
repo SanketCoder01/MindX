@@ -52,12 +52,8 @@ export const decodeGoogleJWT = (token: string): GoogleUser | null => {
 
 // Validate email domain based on user type
 export const validateEmailDomain = (email: string, userType: 'student' | 'faculty'): boolean => {
-  if (userType === 'student') {
-    return email.endsWith('@sanjivani.edu.in')
-  } else if (userType === 'faculty') {
-    return email.endsWith('@set') || email.endsWith('@sanjivani')
-  }
-  return false
+  const allowedDomains = ['@sanjivani.edu.in', '@sanjivani.org.in', '@set.edu.in', '@ac.in'];
+  return allowedDomains.some(domain => email.endsWith(domain));
 }
 
 // Google Sign-In using custom button (mobile-friendly)
@@ -72,7 +68,7 @@ export const signInWithGoogle = (userType: 'student' | 'faculty', buttonElement?
             if (user && validateEmailDomain(user.email, userType)) {
               resolve(user)
             } else {
-              reject(new Error(`Please use your ${userType === 'student' ? '@sanjivani.edu.in' : '@set or @sanjivani'} email address`))
+              reject(new Error('Please use your college email address (@sanjivani.edu.in, @sanjivani.org.in, @set.edu.in, or @ac.in)'))
             }
           } catch (error) {
             reject(new Error('Failed to process Google authentication'))
@@ -121,7 +117,7 @@ export const renderGoogleSignInButton = (
           if (user && validateEmailDomain(user.email, userType)) {
             onSuccess(user)
           } else {
-            onError(`Please use your ${userType === 'student' ? '@sanjivani.edu.in' : '@set or @sanjivani'} email address`)
+            onError('Please use your college email address (@sanjivani.edu.in, @sanjivani.org.in, @set.edu.in, or @ac.in)')
           }
         } catch (error) {
           onError('Failed to process Google authentication')

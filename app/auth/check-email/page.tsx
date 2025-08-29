@@ -92,7 +92,9 @@ export default function CheckEmailPage() {
       .eq('email', user.email)
       .single()
 
-    if (studentData || facultyData) {
+    if (studentData) {
+      router.push('/student-dashboard')
+    } else if (facultyData) {
       router.push('/dashboard')
     } else {
       // Check department-specific student tables
@@ -108,14 +110,14 @@ export default function CheckEmailPage() {
             .single()
           
           if (data) {
-            router.push('/dashboard')
+            router.push('/student-dashboard')
             return
           }
         }
       }
       
-      // Default to regular dashboard if no specific match
-      router.push('/dashboard')
+      // Default to student dashboard if no specific match
+      router.push('/student-dashboard')
     }
   }
 

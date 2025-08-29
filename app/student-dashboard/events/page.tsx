@@ -30,17 +30,11 @@ export default function StudentEventsPage() {
   }, [toast])
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setStudentId(user.id)
-        fetchEvents(user.id)
-      } else {
-        setLoading(false)
-      }
-    }
-    getUser()
-  }, [fetchEvents, supabase.auth])
+    // Disable authentication - use demo student ID
+    const demoStudentId = 'demo-student-123'
+    setStudentId(demoStudentId)
+    fetchEvents(demoStudentId)
+  }, [fetchEvents])
 
   useEffect(() => {
     const filtered = events.filter(event =>
@@ -54,14 +48,7 @@ export default function StudentEventsPage() {
     return <div className="p-6 text-center">Loading events...</div>
   }
 
-  if (!studentId) {
-    return (
-      <div className="p-6 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold">Campus Events</h1>
-        <p className="text-gray-600 mt-4">Please sign in to view and register for events.</p>
-      </div>
-    )
-  }
+  // Remove authentication check - allow access without login
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -83,8 +70,8 @@ export default function StudentEventsPage() {
           <EventCard
             key={event.id}
             event={event}
-            studentId={studentId}
-            onRegister={() => fetchEvents(studentId)}
+            studentId={studentId!}
+            onRegister={() => fetchEvents(studentId!)}
           />
         ))}
       </div>

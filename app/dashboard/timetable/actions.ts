@@ -19,10 +19,8 @@ export interface TimetableEntry {
 export async function uploadTimetable(formData: FormData) {
   const supabase = createClient();
   
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: { message: 'User not authenticated' } };
-  }
+  // Demo mode - no authentication required
+  const demoUserId = 'demo-faculty-123';
 
   const file = formData.get('file') as File;
   const department = formData.get('department') as string;
@@ -52,7 +50,7 @@ export async function uploadTimetable(formData: FormData) {
     const { data, error: dbError } = await supabase
       .from('timetables')
       .insert({
-        faculty_id: user.id,
+        faculty_id: demoUserId,
         department,
         year,
         file_url: publicUrl,
@@ -79,7 +77,7 @@ export async function uploadTimetable(formData: FormData) {
       }
 
       if (students && students.length > 0) {
-        const notificationPromises = students.map(student => 
+        const notificationPromises = students.map((student: any) => 
           createNotification({
             user_id: student.user_id,
             title: 'New Timetable Uploaded',
@@ -105,15 +103,13 @@ export async function uploadTimetable(formData: FormData) {
 export async function getTimetables() {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: { message: 'User not authenticated' } };
-  }
+  // Demo mode - no authentication required
+  const demoUserId = 'demo-faculty-123';
 
   const { data, error } = await supabase
     .from('timetables')
     .select('*')
-    .eq('faculty_id', user.id)
+    .eq('faculty_id', demoUserId)
     .order('uploaded_at', { ascending: false });
 
   if (error) {
@@ -126,17 +122,15 @@ export async function getTimetables() {
 export async function deleteTimetable(id: string) {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: { message: 'User not authenticated' } };
-  }
+  // Demo mode - no authentication required
+  const demoUserId = 'demo-faculty-123';
 
   // Get timetable to delete file from storage
   const { data: timetable } = await supabase
     .from('timetables')
     .select('file_url')
     .eq('id', id)
-    .eq('faculty_id', user.id)
+    .eq('faculty_id', demoUserId)
     .single();
 
   if (timetable?.file_url) {
@@ -151,7 +145,7 @@ export async function deleteTimetable(id: string) {
     .from('timetables')
     .delete()
     .eq('id', id)
-    .eq('faculty_id', user.id);
+    .eq('faculty_id', demoUserId);
 
   if (error) {
     return { error: { message: error.message } };

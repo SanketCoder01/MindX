@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+
+// Demo mode - no authentication required
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"

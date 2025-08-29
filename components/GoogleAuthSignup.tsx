@@ -71,7 +71,7 @@ export default function GoogleAuthSignup({ userType, onComplete, onBack }: Googl
           }))
           setStep('details')
         } else {
-          setError(`Invalid email domain. ${userType === 'student' ? '@sanjivani.edu.in' : '@set or @sanjivani'} required.`)
+          setError('Please use your college email address (@sanjivani.edu.in, @sanjivani.org.in, @set.edu.in, or @ac.in)')
           await supabase.auth.signOut()
         }
       }
@@ -80,6 +80,11 @@ export default function GoogleAuthSignup({ userType, onComplete, onBack }: Googl
   }, [supabase, userType])
 
   const validateEmailDomain = (email: string, type: 'student' | 'faculty'): boolean => {
+    const allowedDomains = ['@sanjivani.edu.in', '@sanjivani.org.in', '@set.edu.in', '@ac.in'];
+    return allowedDomains.some(domain => email.endsWith(domain));
+  }
+
+  const validateEmailDomainOld = (email: string, type: 'student' | 'faculty'): boolean => {
     if (type === 'student') {
       return email.endsWith('@sanjivani.edu.in')
     } else {
